@@ -1,70 +1,131 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use sha256::digest;
 
 struct Merkle_Tree{
-    hasher:DefaultHasher,
-    root:u64,
-    tree: Vec<u64>,
+    root:String,
+    tree: Vec<String>,
 }
 /* */
 impl Merkle_Tree {
-
-
-    fn verify(&self,proof:Vec<u64>,mut leaf_index:usize) -> bool{
-        let mut hasher = &self.hasher;
-        let mut hash_for_verification:u64 = self.tree[leaf_index];
-        for i in 0..proof.len(){
-            if leaf_index % 2 == 0 {
-                (hash_for_verification,proof[i]).hash(&mut hasher);
-                hash_for_verification = hasher.finish();
-            } else {
-                (proof[i],hash_for_verification).hash(&mut hasher);
-                hash_for_verification = hasher.finish();
+    /// Given a proof and an index of a data hash the function must determine wether the proof is correct.
+    /// For understanding this function we can consider the following tree:
+    ///               root
+    ///          h12        h34 
+    ///        h1   h2    h3   h4
+    ///        |    |     |     |
+    ///     data1 data2 data3 data4
+    /// The array representation would be: [root,h12,h34,h1,h2,h3,h4]
+    /// With the indexes                     0   1   2   3  4  5   6
+    fn verify(&self,proofs:Vec<String>,mut leaf_index:usize) -> bool{
+        let mut hash_for_verification = self.tree[leaf_index].clone();
+        for proof in proofs{
+            if leaf_index % 2 == 1 { // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
+                hash_for_verification = digest(hash_for_verification.to_owned()+&proof);
+            } else { // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
+                hash_for_verification = digest(proof.clone()+&hash_for_verification);
+                leaf_index-=1; //if it's a right child this is necesary to calculate its parent
             }
             leaf_index = leaf_index/2;
         }
-        println!("root calculado: {}",hash_for_verification);
-        println!("root og: {} ",self.root);
         hash_for_verification == self.root
     }
 }
 
 
 fn main() {
-    let mut tree_hasher = DefaultHasher::new();
-    let vector = [1,2,3,4];
+    let merkle_tree = merkle_tree_4_leaves_setup();
+
+    let hash1 = digest("1"); //idx 3
+    let hash2 = digest("2"); //idx 4
+    let hash3 = digest("3"); //idx 5
+    let hash4 = digest("4"); //idx 6
+
+    let hash12: String = digest(hash1.clone() + &hash2);
+    let hash34 = digest(hash3 + &hash4);
+
+    let proof1: Vec<String> = vec![hash1,hash34]; 
+    println!("Verification result = {}",merkle_tree.verify(proof1,4));  
+
+    let proof2: Vec<String> = vec![hash4,hash12]; 
+    println!("Verification result = {}",merkle_tree.verify(proof2,5));  
+
+}
+
+
+fn merkle_tree_4_leaves_setup()->Merkle_Tree{
+    let vector = ["1","2","3","4"];
     let mut leaves = vec![];
     for data in vector{
-        data.hash(&mut tree_hasher);
-        leaves.push(tree_hasher.finish());
+        leaves.push(digest(data));
     }
-
     let mut level_1_branches =  vec![];
     for i in (0..leaves.len()).step_by(2) {
-        (leaves[i],leaves[i+1]).hash(&mut tree_hasher);
-        level_1_branches.push(tree_hasher.finish());
+        level_1_branches.push(digest(leaves[i].clone()+ &leaves[i+1]));
+    }
+    level_1_branches.append(&mut leaves); //Concatenating the leaves.
+
+    let mut final_tree = vec![];
+    final_tree.push(digest(level_1_branches[0].clone()+ &level_1_branches[1]));
+    final_tree.append(&mut level_1_branches.clone());
+
+    Merkle_Tree{
+        root: final_tree[0].clone(),
+        tree: final_tree.clone(),
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn verify_correct_proof_with_even_leaf_index() {
+        let merkle_tree = merkle_tree_4_leaves_setup();
+
+        let hash1 = digest("1"); //idx 3
+        let hash3 = digest("3"); //idx 5
+        let hash4 = digest("4"); //idx 6
+ 
+        let hash34 = digest(hash3 + &hash4);
+        let proof: Vec<String> = vec![hash1,hash34]; 
+        assert!(merkle_tree.verify(proof,4));
     }
 
-    level_1_branches.append(&mut leaves);
-    (level_1_branches[0],level_1_branches[1]).hash(&mut tree_hasher);
+    #[test]
+    fn verify_correct_proof_with_odd_leaf_index() {
+        let merkle_tree = merkle_tree_4_leaves_setup();
 
-    let merkle_tree = Merkle_Tree{
-        hasher: tree_hasher,
-        root: tree_hasher.finish(),
-        tree: level_1_branches.clone(),
-    };
+        let hash1 = digest("1"); //idx 3
+        let hash2 = digest("2"); //idx 4
+        let hash4 = digest("4"); //idx 6
+ 
+        let hash12 = digest(hash1 + &hash2);
+        let proof: Vec<String> = vec![hash4,hash12]; 
+        assert!(merkle_tree.verify(proof,5));
+    }
 
-    let proof: Vec<u64> = vec![2]; 
+    #[test]
+    fn verify_incorrect_proof() {
+        let merkle_tree = merkle_tree_4_leaves_setup();
 
-    let a = merkle_tree.verify(proof,2);  
-    println!("{}",a);  
+        let hash1 = digest("1"); //idx 3
+        let hash4 = digest("4"); //idx 6
+ 
+        let proof: Vec<String> = vec![hash4,hash1]; 
+        assert!(!merkle_tree.verify(proof,5));
+    }
 
-    println!("{:?}",merkle_tree.tree);  
-    
-    //h1, h2,  1, 2, 3, 4
-    let proof: Vec<u64> = vec![level_1_branches[2],level_1_branches[1]]; 
-    println!("{}",level_1_branches[2]);  
-    println!("{}",level_1_branches[1]);  
+    #[test]
+    fn verify_incorrect_proof_with_noise() {
+        let merkle_tree = merkle_tree_4_leaves_setup();
 
-    let b = merkle_tree.verify(proof,3);  
-    println!("{}",b);  
+        let hash1 = digest("1"); //idx 3
+        let hash3 = digest("3"); //idx 5
+        let hash4 = digest("4"); //idx 6
+ 
+        let hash34 = digest(hash3 + &hash4)+&"RUIDO";
+        let proof: Vec<String> = vec![hash1,hash34]; 
+        assert!(!merkle_tree.verify(proof,4));
+    }
+
 }
