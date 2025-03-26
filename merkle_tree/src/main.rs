@@ -14,8 +14,9 @@ impl Merkle_Tree {
             level_n.push(digest(*data));
         }
         let mut current_tree = vec![];
-        for level in 0..(data_vector.len() as f64).sqrt() as usize{ //Amount of levels
+        for level in 0..(data_vector.len() as f64).sqrt().ceil() as usize{ //Amount of levels
             let mut level_n_minus1 = vec![];
+            println!("level {}",level);
             for i in (0..level_n.len()).step_by(2) { //Build new level from the previous one
                 level_n_minus1.push(digest(level_n[i].clone()+ &level_n[i+1]));
             }
@@ -77,7 +78,9 @@ impl Merkle_Tree {
 
 
 fn main() {
-
+    let vector = vec!["1","2","3","4","5","6","7","8"];
+    let merkle_tree = Merkle_Tree::new(vector);
+    
 }
 
 
@@ -106,6 +109,38 @@ mod tests {
         let hash_leaves = vec![hash1,hash2,hash3,hash4];
         assert_eq!(merkle_tree.leaves,4);
         assert_eq!(merkle_tree.tree[3..],hash_leaves);
+    }
+
+    #[test]
+    fn new_merkle_tree_of_8_leaves() {
+        let merkle_tree = merkle_tree_8_leaves_setup();
+
+        let hash1 = digest("1"); //idx 7
+        let hash2 = digest("2"); //idx 8
+        let hash3 = digest("3"); //idx 9
+        let hash4 = digest("4"); //idx 10
+
+        let hash5 = digest("5"); //idx 11
+        let hash6 = digest("6"); //idx 12
+        let hash7 = digest("7"); //idx 13
+        let hash8 = digest("8"); //idx 14
+
+        let hash12 = digest(hash1.clone() + &hash2);
+        let hash34 = digest(hash3.clone() + &hash4);
+        let hash56 = digest(hash5.clone() + &hash6);
+        let hash78 = digest(hash7.clone() + &hash8);
+
+        let hash1234 = digest(hash12.clone() + &hash34);
+        let hash5678 = digest(hash56.clone() + &hash78);
+
+        let root = digest(hash1234.clone() + &hash5678);
+
+        let tree = vec![root, hash1234, hash5678, hash12, hash34, hash56, hash78,hash1,hash2,hash3,hash4,hash5,hash6,hash7,hash8];
+        //let hash_leaves = vec![hash1,hash2,hash3,hash4,hash5,hash6,hash7,hash8];
+        assert_eq!(merkle_tree.leaves,8);
+        //assert_eq!(merkle_tree.tree.len(),15);
+        assert_eq!(merkle_tree.tree,tree);
+        //assert_eq!(merkle_tree.tree[7..],hash_leaves);
     }
 
     #[test]
@@ -182,5 +217,56 @@ mod tests {
         let hash12 = digest(hash1 + &hash2);
         let proof: Vec<String> = vec![hash4,hash12]; 
         assert_eq!(merkle_tree.give_proof(5),proof);
+    }
+
+    #[test]
+    fn verify_with_odd_leaf_index_8leaves_tree() {
+        let merkle_tree = merkle_tree_8_leaves_setup();
+
+        let hash1 = digest("1"); //idx 7
+        let hash2 = digest("2"); //idx 8
+        let hash3 = digest("3"); //idx 9
+        let hash4 = digest("4"); //idx 10
+
+        let hash12 = digest(hash1 + &hash2);
+        let hash34 = digest(hash3 + &hash4);
+
+        let hash1234 =  digest(hash12 + &hash34);
+
+        let hash6 = digest("6"); //idx 12
+
+        let hash7 = digest("7"); //idx 13
+        let hash8 = digest("8"); //idx 14
+
+        let hash78 = digest(hash7 + &hash8);
+ 
+        let proof: Vec<String> = vec![hash6,hash78,hash1234]; 
+        assert!(merkle_tree.verify(proof,11));
+    }
+
+
+    #[test]
+    fn give_proof_with_odd_leaf_index_8leaves_tree() {
+        let merkle_tree = merkle_tree_8_leaves_setup();
+
+        let hash1 = digest("1"); //idx 7
+        let hash2 = digest("2"); //idx 8
+        let hash3 = digest("3"); //idx 9
+        let hash4 = digest("4"); //idx 10
+
+        let hash12 = digest(hash1 + &hash2);
+        let hash34 = digest(hash3 + &hash4);
+
+        let hash1234 =  digest(hash12 + &hash34);
+
+        let hash6 = digest("6"); //idx 12
+
+        let hash7 = digest("7"); //idx 13
+        let hash8 = digest("8"); //idx 14
+
+        let hash78 = digest(hash7 + &hash8);
+ 
+        let proof: Vec<String> = vec![hash6,hash78,hash1234]; 
+        assert_eq!(merkle_tree.give_proof(11),proof);
     }
 }
