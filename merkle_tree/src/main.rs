@@ -385,7 +385,6 @@ mod tests {
     fn add_node_and_verify_proof_with_odd_leaf_tree_of_5_data_8_leaves() {
         let mut merkle_tree = merkle_tree_4_leaves_setup();
         merkle_tree.add_node("5");
-        println!("og leaves {:?}",merkle_tree.og_leaves);
         let hash1 = digest("1"); //idx 7
         let hash2 = digest("2"); //idx 8
         let hash3 = digest("3"); //idx 9
