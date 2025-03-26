@@ -63,17 +63,16 @@ impl Merkle_Tree{
     }
 
     /// Given an index of a data hash the function must return the proof that the tree contains that data hash.
-    fn give_proof(&self,leaf_index:usize)-> Vec<String>{
-        let mut index = leaf_index;
+    fn generate_proof(&self,mut node_index:usize)-> Vec<String>{
         let mut proof:Vec<String> = vec![];
-        while index > 0 {
-            if index % 2 == 1 { // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
-                proof.push(self.tree[index+1].clone());
+        while node_index > 0 {
+            if node_index % 2 == 1 { // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
+                proof.push(self.tree[node_index+1].clone());
             } else { // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
-                proof.push(self.tree[index-1].clone());
-                index-=1; //if it's a right child this is necesary to calculate its parent
+                proof.push(self.tree[node_index-1].clone());
+                node_index-=1; //if it's a right child this is necesary to calculate its parent
             }
-            index = index/2;
+            node_index = node_index/2;
         }
         proof
     }
@@ -105,11 +104,6 @@ fn extend_to_power2_size(vec:Vec<String>)->Vec<String>{
 }
 
 fn main() {
-    let vector = vec!["1","2","3","4"];
-    //let merkle_tree = Merkle_Tree::new(vector);
-    let string_data_vec:Vec<String> = vector.iter().map(|s| s.to_string()).collect();
-    println!("{:?}",extend_to_power2_size(string_data_vec));
-
 }
 
 
@@ -295,7 +289,7 @@ mod tests {
     }
 
     #[test]
-    fn give_proof_with_even_leaf_index() {
+    fn generate_proof_with_even_leaf_index() {
         let merkle_tree = merkle_tree_4_leaves_setup();
 
         let hash1 = digest("1"); //idx 3
@@ -304,11 +298,11 @@ mod tests {
  
         let hash34 = digest(hash3 + &hash4);
         let proof: Vec<String> = vec![hash1,hash34]; 
-        assert_eq!(merkle_tree.give_proof(4),proof);
+        assert_eq!(merkle_tree.generate_proof(4),proof);
     }
 
     #[test]
-    fn give_proof_with_odd_leaf_index() {
+    fn generate_proof_with_odd_leaf_index() {
         let merkle_tree = merkle_tree_4_leaves_setup();
 
         let hash1 = digest("1"); //idx 3
@@ -317,11 +311,11 @@ mod tests {
  
         let hash12 = digest(hash1 + &hash2);
         let proof: Vec<String> = vec![hash4,hash12]; 
-        assert_eq!(merkle_tree.give_proof(5),proof);
+        assert_eq!(merkle_tree.generate_proof(5),proof);
     }
 
     #[test]
-    fn give_proof_with_odd_leaf_index_8leaves_tree() {
+    fn generate_proof_with_odd_leaf_index_8leaves_tree() {
         let merkle_tree = merkle_tree_8_leaves_setup();
 
         let hash1 = digest("1"); //idx 7
@@ -342,11 +336,11 @@ mod tests {
         let hash78 = digest(hash7 + &hash8);
  
         let proof: Vec<String> = vec![hash6,hash78,hash1234]; 
-        assert_eq!(merkle_tree.give_proof(11),proof);
+        assert_eq!(merkle_tree.generate_proof(11),proof);
     }
 
     #[test]
-    fn give_proof_with_odd_leaf_tree_of_5_data_8_leaves() {
+    fn generate_proof_with_odd_leaf_tree_of_5_data_8_leaves() {
         let merkle_tree = merkle_tree_5_data_8_leaves_setup();
 
         let hash1 = digest("1"); //idx 7
@@ -363,7 +357,7 @@ mod tests {
         let hash1234 = digest(hash12.clone() + &hash34);
 
         let proof = vec![hash5,hash55,hash1234];
-        assert_eq!(merkle_tree.give_proof(11),proof);
+        assert_eq!(merkle_tree.generate_proof(11),proof);
     }
 
     #[test]
