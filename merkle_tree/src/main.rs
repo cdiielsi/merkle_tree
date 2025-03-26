@@ -37,7 +37,7 @@ impl Merkle_Tree {
             level_n.push(digest(*data));
         }
         let mut current_tree = vec![];
-        for level in 0..(data_vector.len() as f64).sqrt() as usize{ //Amount of levels
+        for level in 0..(data_vector.len() as f64).sqrt().ceil() as usize{ //Amount of levels
             let mut level_n_minus1 = vec![];
             for i in (0..level_n.len()).step_by(2) { //Build new level from the previous one
                 level_n_minus1.push(digest(level_n[i].clone()+ &level_n[i+1]));
