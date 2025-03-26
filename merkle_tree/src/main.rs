@@ -294,3 +294,4 @@ mod tests {
         assert_ne!(merkle_tree.give_proof(9),proof);
     }
 }
+
