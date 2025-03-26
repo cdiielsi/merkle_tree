@@ -16,7 +16,6 @@ impl Merkle_Tree {
         let mut current_tree = vec![];
         for level in 0..(data_vector.len() as f64).sqrt().ceil() as usize{ //Amount of levels
             let mut level_n_minus1 = vec![];
-            println!("level {}",level);
             for i in (0..level_n.len()).step_by(2) { //Build new level from the previous one
                 level_n_minus1.push(digest(level_n[i].clone()+ &level_n[i+1]));
             }
@@ -268,5 +267,30 @@ mod tests {
  
         let proof: Vec<String> = vec![hash6,hash78,hash1234]; 
         assert_eq!(merkle_tree.give_proof(11),proof);
+    }
+
+    #[test]
+    fn give_incorrect_proof_with_odd_leaf_index_8leaves_tree() {
+        let merkle_tree = merkle_tree_8_leaves_setup();
+
+        let hash1 = digest("1"); //idx 7
+        let hash2 = digest("2"); //idx 8
+        let hash3 = digest("3"); //idx 9
+        let hash4 = digest("4"); //idx 10
+
+        let hash12 = digest(hash1 + &hash2);
+        let hash34 = digest(hash3 + &hash4);
+
+        let hash1234 =  digest(hash12 + &hash34);
+
+        let hash6 = digest("6"); //idx 12
+
+        let hash7 = digest("7"); //idx 13
+        let hash8 = digest("8"); //idx 14
+
+        let hash78 = digest(hash7 + &hash8);
+ 
+        let proof: Vec<String> = vec![hash6,hash78,hash1234]; //This proof is the same as last test for the "5" data node
+        assert_ne!(merkle_tree.give_proof(9),proof);
     }
 }
