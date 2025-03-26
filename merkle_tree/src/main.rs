@@ -1,8 +1,8 @@
 use sha256::digest;
 
 struct Merkle_Tree{
-    root:String,
     tree: Vec<String>,
+    leaves : usize,
 }
 /* */
 impl Merkle_Tree {
@@ -26,57 +26,66 @@ impl Merkle_Tree {
             }
             leaf_index = leaf_index/2;
         }
-        hash_for_verification == self.root
+        hash_for_verification == self.tree[0]
+    }
+
+    /// Builds the tree concatenating the diferent levels into one array.
+    /// Te final array tree goes from root to leaves -> [root....branch_n, branch_n+1....leaf].
+    fn new(data_vector:Vec<&str>)->Self{
+        let mut level_n = vec![];
+        for data in &data_vector{
+            level_n.push(digest(*data));
+        }
+        let mut current_tree = vec![];
+        for level in 0..(data_vector.len() as f64).sqrt().ceil() as usize{ //Amount of levels
+            let mut level_n_minus1 = vec![];
+            for i in (0..level_n.len()).step_by(2) { //Build new level from the previous one
+                level_n_minus1.push(digest(level_n[i].clone()+ &level_n[i+1]));
+            }
+            let next_current_level = level_n_minus1.clone();
+            if level == 0{
+                level_n_minus1.append(&mut level_n); //Concatenating the leaves.
+            }else{
+                level_n_minus1.append(&mut current_tree); //Concatenating the previous levels.
+            }
+            current_tree = level_n_minus1.clone();
+            level_n = next_current_level;
+        }
+    
+        Self{
+            tree: current_tree.clone(),
+            leaves: data_vector.len(),
+        }
     }
 }
 
 
 fn main() {
-    let merkle_tree = merkle_tree_4_leaves_setup();
-
-    let hash1 = digest("1"); //idx 3
-    let hash2 = digest("2"); //idx 4
-    let hash3 = digest("3"); //idx 5
-    let hash4 = digest("4"); //idx 6
-
-    let hash12: String = digest(hash1.clone() + &hash2);
-    let hash34 = digest(hash3 + &hash4);
-
-    let proof1: Vec<String> = vec![hash1,hash34]; 
-    println!("Verification result = {}",merkle_tree.verify(proof1,4));  
-
-    let proof2: Vec<String> = vec![hash4,hash12]; 
-    println!("Verification result = {}",merkle_tree.verify(proof2,5));  
-
-}
-
-
-fn merkle_tree_4_leaves_setup()->Merkle_Tree{
-    let vector = ["1","2","3","4"];
-    let mut leaves = vec![];
-    for data in vector{
-        leaves.push(digest(data));
-    }
-    let mut level_1_branches =  vec![];
-    for i in (0..leaves.len()).step_by(2) {
-        level_1_branches.push(digest(leaves[i].clone()+ &leaves[i+1]));
-    }
-    level_1_branches.append(&mut leaves); //Concatenating the leaves.
-
-    let mut final_tree = vec![];
-    final_tree.push(digest(level_1_branches[0].clone()+ &level_1_branches[1]));
-    final_tree.append(&mut level_1_branches.clone());
-
-    Merkle_Tree{
-        root: final_tree[0].clone(),
-        tree: final_tree.clone(),
-    }
+    
 }
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn merkle_tree_4_leaves_setup()->Merkle_Tree{
+        let vector = vec!["1","2","3","4"];
+        Merkle_Tree::new(vector)
+    }
+
+    #[test]
+    fn new_merkle_tree_of_4_leaves() {
+        let merkle_tree = merkle_tree_4_leaves_setup();
+
+        let hash1 = digest("1"); //idx 3
+        let hash2 = digest("2"); //idx 4
+        let hash3 = digest("3"); //idx 5
+        let hash4 = digest("4"); //idx 6
+        
+        let hash_leaves = vec![hash1,hash2,hash3,hash4];
+        assert_eq!(merkle_tree.leaves,4);
+        assert_eq!(merkle_tree.tree[3..],hash_leaves);
+    }
 
     #[test]
     fn verify_correct_proof_with_even_leaf_index() {
