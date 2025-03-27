@@ -11,7 +11,7 @@ impl Merkle_Tree {
     /// The final array tree goes from root to leaves -> [root....branch_n, branch_n+1....leaf].
     fn new(data_vector: Vec<&str>) -> Self {
         let string_data_vec: Vec<String> = data_vector.iter().map(|s| s.to_string()).collect();
-        let pow2_data_vector = extend_to_power2_size(string_data_vec.clone());
+        let pow2_data_vector = extend_to_power2_size(&string_data_vec);
         let mut level_n = vec![];
         for data in &pow2_data_vector {
             level_n.push(digest(data.clone()));
@@ -67,8 +67,11 @@ impl Merkle_Tree {
     }
 
     /// Given an index of a data hash the function must return the proof that the tree contains that data hash.
-    fn generate_proof(&self, mut node_index: usize) -> Vec<String> {
+    fn generate_proof(&self, mut node_index: usize) -> Option<Vec<String>> {
         let mut proof: Vec<String> = vec![];
+        if node_index > self.tree.len() {
+            return None;
+        }
         while node_index > 0 {
             if node_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
@@ -80,7 +83,7 @@ impl Merkle_Tree {
             }
             node_index = node_index / 2;
         }
-        proof
+        Some(proof)
     }
 
     /// Returns a merkle tree with a new node, if the total amount of data is not a power of 2
@@ -96,7 +99,7 @@ impl Merkle_Tree {
 }
 
 ///Extends the size of a vector to a power of 2 by repeating the last value.
-fn extend_to_power2_size(vec: Vec<String>) -> Vec<String> {
+fn extend_to_power2_size(vec: &Vec<String>) -> Vec<String> {
     let mut copy: Vec<String> = vec.clone();
     let diff_to_power_of_2 = ((vec.len() as f64).log2()).abs() - (vec.len()).ilog2() as f64;
     if diff_to_power_of_2 != 0.0 {
@@ -320,7 +323,7 @@ mod tests {
 
         let hash34 = digest(hash3 + &hash4);
         let proof: Vec<String> = vec![hash1, hash34];
-        assert_eq!(merkle_tree.generate_proof(4), proof);
+        assert_eq!(merkle_tree.generate_proof(4).unwrap(), proof);
     }
 
     #[test]
@@ -333,7 +336,7 @@ mod tests {
 
         let hash12 = digest(hash1 + &hash2);
         let proof: Vec<String> = vec![hash4, hash12];
-        assert_eq!(merkle_tree.generate_proof(5), proof);
+        assert_eq!(merkle_tree.generate_proof(5).unwrap(), proof);
     }
 
     #[test]
@@ -358,7 +361,7 @@ mod tests {
         let hash78 = digest(hash7 + &hash8);
 
         let proof: Vec<String> = vec![hash6, hash78, hash1234];
-        assert_eq!(merkle_tree.generate_proof(11), proof);
+        assert_eq!(merkle_tree.generate_proof(11).unwrap(), proof);
     }
 
     #[test]
@@ -379,7 +382,7 @@ mod tests {
         let hash1234 = digest(hash12.clone() + &hash34);
 
         let proof = vec![hash5, hash55, hash1234];
-        assert_eq!(merkle_tree.generate_proof(11), proof);
+        assert_eq!(merkle_tree.generate_proof(11).unwrap(), proof);
     }
 
     #[test]
@@ -388,18 +391,18 @@ mod tests {
             .iter()
             .map(|s| s.to_string())
             .collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "4"]);
 
         let vector = vec!["1", "2", "3"].iter().map(|s| s.to_string()).collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "3"]);
 
         let vector = vec!["1", "2", "3", "4", "5"]
             .iter()
             .map(|s| s.to_string())
             .collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(
             vector_extended,
             vec!["1", "2", "3", "4", "5", "5", "5", "5"]
