@@ -5,7 +5,7 @@ This is an implementation of a binary merkle tree in rust.
 A merkle tree (also known as a hash tree) is a tree used to store several data in a particular way: every leaf node is labelled with a hash of a data block, and every other node is labelled with a hash of the labels of its children. The tree disposition of the hashes allows for efficient and secure verification of its contents.
 
 ### What are a Merkle Trees used for?
-This structure is used for data verification in peer to peer networks, such as bitcoin, so you can efficiently prove that transactions were validated. It's also used for maintaining the integrity of files stored across networks and transmitting files over unreliable channels.
+Plainly said, a Merkle Tree is for comparing and verifying if two users have the same data. This structure is used for data verification in peer to peer networks, such as bitcoin, so you can efficiently prove that transactions were validated. It's also used for maintaining the integrity of files stored across networks and transmitting files over unreliable channels.
 
 ### About this project
 The tree structure implemented in this project revolves around an array that should be interpreted as the following example:
