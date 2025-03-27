@@ -64,7 +64,7 @@ impl Merkle_Tree {
     /// The array representation would be: [root,h12,h34,h1,h2,h3,h4]
     /// With the indexes                     0   1   2   3  4  5   6
     pub fn verify(&self, proofs: Vec<String>, mut leaf_index: usize) -> bool {
-        let mut hash_for_verification = self.tree[leaf_index].clone();
+        let mut hash_for_verification = self.tree.get(leaf_index).unwrap().clone();
         for proof in proofs {
             if leaf_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
@@ -88,10 +88,10 @@ impl Merkle_Tree {
         while node_index > 0 {
             if node_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
-                proof.push(self.tree[node_index + 1].clone());
+                proof.push(self.tree.get(node_index + 1)?.clone());
             } else {
                 // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
-                proof.push(self.tree[node_index - 1].clone());
+                proof.push(self.tree.get(node_index - 1)?.clone());
                 node_index -= 1; //if it's a right child this is necesary to calculate its parent
             }
             node_index = node_index / 2;
