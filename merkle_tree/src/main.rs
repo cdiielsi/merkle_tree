@@ -11,7 +11,7 @@ impl Merkle_Tree {
     /// The final array tree goes from root to leaves -> [root....branch_n, branch_n+1....leaf].
     fn new(data_vector: Vec<&str>) -> Self {
         let string_data_vec: Vec<String> = data_vector.iter().map(|s| s.to_string()).collect();
-        let pow2_data_vector = extend_to_power2_size(string_data_vec.clone());
+        let pow2_data_vector = extend_to_power2_size(&string_data_vec);
         let mut level_n = vec![];
         for data in &pow2_data_vector {
             level_n.push(digest(data.clone()));
@@ -99,7 +99,7 @@ impl Merkle_Tree {
 }
 
 ///Extends the size of a vector to a power of 2 by repeating the last value.
-fn extend_to_power2_size(vec: Vec<String>) -> Vec<String> {
+fn extend_to_power2_size(vec: &Vec<String>) -> Vec<String> {
     let mut copy: Vec<String> = vec.clone();
     let diff_to_power_of_2 = ((vec.len() as f64).log2()).abs() - (vec.len()).ilog2() as f64;
     if diff_to_power_of_2 != 0.0 {
@@ -391,18 +391,18 @@ mod tests {
             .iter()
             .map(|s| s.to_string())
             .collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "4"]);
 
         let vector = vec!["1", "2", "3"].iter().map(|s| s.to_string()).collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "3"]);
 
         let vector = vec!["1", "2", "3", "4", "5"]
             .iter()
             .map(|s| s.to_string())
             .collect();
-        let vector_extended = extend_to_power2_size(vector);
+        let vector_extended = extend_to_power2_size(&vector);
         assert_eq!(
             vector_extended,
             vec!["1", "2", "3", "4", "5", "5", "5", "5"]
