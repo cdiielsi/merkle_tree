@@ -76,7 +76,7 @@ impl Merkle_Tree {
             }
             leaf_index = leaf_index / 2;
         }
-        hash_for_verification == self.tree[0]
+        hash_for_verification == *self.tree.get(0).unwrap()
     }
 
     /// Given an index of a data hash the function must return the proof that the tree contains that data hash.
