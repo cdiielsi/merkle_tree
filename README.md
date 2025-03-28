@@ -19,7 +19,7 @@ Given a 4 leves tree:
        |    |     |     |
     data1 data2 data3 data4
 
-The array representation would be: [root,h12,h34,h1,h2,h3,h4]
+The array representation would be: [root,h12,h34,h1,h2,h3,h4] <br />
 With the indexes                     0   1   2   3  4  5   6
 
 This implementation supports:
@@ -42,7 +42,7 @@ This implementation supports:
        |    |     |     |     |    |     |     |
     data1 data2 data3 data4 data5 data6 data6 data6 
 
-The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h6,h6,h6]
+The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h6,h6,h6] <br />
 With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
 
 - Adding new data to an existing Merkle Tree:
