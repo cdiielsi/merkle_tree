@@ -28,6 +28,7 @@ This implementation supports:
     This implies having all the hashes computed and inserted into an array as shown previously. In cases where the amount of original data is not a power of 2 the last element of the array is duplicated until the size of the array reaches such size. Then the tree is designed as follows:
 
  Given a 6 leves tree:   
+ 
                           root
                        /       \
                       /         \
