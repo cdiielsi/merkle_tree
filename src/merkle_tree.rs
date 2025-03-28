@@ -1,4 +1,4 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::hash::{DefaultHasher,Hasher,Hash};
 
 /// Implementation of merkle tree. The struct has a field for the tree structure which revolves around an array that
 /// should be interpreted as the following example:
@@ -37,7 +37,7 @@ impl MerkleTree {
             let mut level_n_minus1 = vec![];
             for i in (0..level_n.len()).step_by(2) {
                 //Build new level from the previous one
-                level_n_minus1.push(hash(level_n[i].clone() + &level_n[i + 1]));
+                level_n_minus1.push(hash(level_n[i].clone() as u128+ level_n[i + 1] as u128));
             }
             let next_current_level = level_n_minus1.clone();
             if level == 0 {
@@ -72,10 +72,10 @@ impl MerkleTree {
         for proof in proofs {
             if leaf_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
-                hash_for_verification = hash(hash_for_verification.to_owned() + &proof);
+                hash_for_verification = hash(hash_for_verification.to_owned() as u128 + proof as u128);
             } else {
                 // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
-                hash_for_verification = hash(proof.clone() + &hash_for_verification);
+                hash_for_verification = hash(proof.clone() as u128+ hash_for_verification as u128);
                 leaf_index -= 1; //if it's a right child this is necesary to calculate its parent
             }
             leaf_index = leaf_index / 2;
@@ -148,14 +148,14 @@ impl MerkleTree {
                     if node_index % 2 == 1 {
                         // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
                         self.tree[node_index / 2] = hash(
-                            self.tree.get(node_index)?.to_owned()
-                                + self.tree.get(node_index + 1)?,
+                            self.tree.get(node_index)?.to_owned() as u128
+                                + *self.tree.get(node_index + 1)? as u128,
                         );
                     } else {
                         // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
                         self.tree[(node_index - 1) / 2] = hash(
-                            self.tree.get(node_index - 1)?.to_owned()
-                                + self.tree.get(node_index)?,
+                            self.tree.get(node_index - 1)?.to_owned() as u128
+                                + *self.tree.get(node_index)? as u128,
                         );
                         node_index -= 1; //if it's a right child this is necesary to calculate its parent
                     }
@@ -175,7 +175,8 @@ impl MerkleTree {
                 let mut current_level: Vec<u64> =
                     self.tree[level_start_index..level_end_index].to_vec();
                 current_level.push(new_data.clone()); //push the new data
-                let current_level_to_pow_2 = extend_to_power2_size(current_level); //get the new nodes level
+                let current_level_to_pow_2 =
+                    extend_to_power2_size(current_level); //get the new nodes level
                 if level != 0 {
                     computed_base = current_tree.clone();
                 }
@@ -184,9 +185,9 @@ impl MerkleTree {
                 level_end_index = level_start_index;
                 amount_of_current_nodes /= 2;
                 level_start_index = level_start_index - amount_of_current_nodes;
-                new_data = hash(new_data.clone() + &new_data); //calculate current level hash parent
+                new_data = hash(new_data.clone() as u128 + new_data as u128); //calculate current level hash parent
             }
-            new_data = hash(current_tree.get(0)?.to_owned() + current_tree.get(1)?); //calculate new root
+            new_data = hash(current_tree.get(0)?.to_owned() as u128 + *current_tree.get(1)? as u128); //calculate new root
             current_tree.insert(0, new_data);
             self.tree = current_tree;
             self.leaves_amount *= 2;
@@ -199,7 +200,7 @@ impl MerkleTree {
 
 ///Extends the size of a vector to a power of 2 by repeating the last value.
 fn extend_to_power2_size<T: Clone + ToString>(vec: Vec<T>) -> Vec<T> {
-    let mut copy: Vec<T> = vec.clone();
+    let mut copy:Vec<T>  = vec.clone();
     if !is_power_of_2(vec.len()) {
         let new_size = (2 as i32).pow(((vec.len() as f64).log2()).ceil() as u32); // ((vec.len() as f64).log2()).ceil() is an operation to get the biggest power of 2 exponent smaller than vec.len()
         for _ in 0..(new_size as usize) - vec.len() {
@@ -265,15 +266,15 @@ mod tests {
         let hash7 = hash("7"); //idx 13
         let hash8 = hash("8"); //idx 14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash56 = hash(hash5.clone() + &hash6);
-        let hash78 = hash(hash7.clone() + &hash8);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash56 = hash(hash5.clone() as u128 + hash6 as u128);
+        let hash78 = hash(hash7.clone() as u128 + hash8 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
-        let hash5678 = hash(hash56.clone() + &hash78);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
+        let hash5678 = hash(hash56.clone() as u128 + hash78 as u128);
 
-        let root = hash(hash1234.clone() + &hash5678);
+        let root = hash(hash1234.clone() as u128 + hash5678 as u128);
 
         let tree = vec![
             root, hash1234, hash5678, hash12, hash34, hash56, hash78, hash1, hash2, hash3, hash4,
@@ -294,14 +295,14 @@ mod tests {
 
         let hash5 = hash("5"); //idx 11..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash55 = hash(hash5.clone() + &hash5);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash55 = hash(hash5.clone() as u128 + hash5 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
-        let hash5555 = hash(hash55.clone() + &hash55);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
+        let hash5555 = hash(hash55.clone() as u128 + hash55 as u128);
 
-        let root = hash(hash1234.clone() + &hash5555);
+        let root = hash(hash1234.clone() as u128 + hash5555 as u128);
 
         let tree = vec![
             root,
@@ -332,8 +333,8 @@ mod tests {
         let hash3 = hash("3"); //idx 5
         let hash4 = hash("4"); //idx 6
 
-        let hash34 = hash(hash3 + &hash4);
-        let proof: Vec<String> = vec![hash1, hash34];
+        let hash34 = hash(hash3 as u128 + hash4 as u128);
+        let proof: Vec<u64> = vec![hash1, hash34];
         assert!(merkle_tree.verify(proof, 4).unwrap());
     }
 
@@ -345,8 +346,8 @@ mod tests {
         let hash2 = hash("2"); //idx 4
         let hash4 = hash("4"); //idx 6
 
-        let hash12 = hash(hash1 + &hash2);
-        let proof: Vec<String> = vec![hash4, hash12];
+        let hash12 = hash(hash1 as u128 + hash2 as u128);
+        let proof: Vec<u64> = vec![hash4, hash12];
         assert!(merkle_tree.verify(proof, 5).unwrap());
     }
 
@@ -357,7 +358,7 @@ mod tests {
         let hash1 = hash("1"); //idx 3
         let hash4 = hash("4"); //idx 6
 
-        let proof: Vec<String> = vec![hash4, hash1];
+        let proof: Vec<u64> = vec![hash4, hash1];
         assert!(!merkle_tree.verify(proof, 5).unwrap());
     }
 
@@ -369,8 +370,8 @@ mod tests {
         let hash3 = hash("3"); //idx 5
         let hash4 = hash("4"); //idx 6
 
-        let hash34 = hash(hash3 + &hash4) + &"RUIDO";
-        let proof: Vec<String> = vec![hash1, hash34];
+        let hash34 = hash(hash3 as u128+ hash4 as u128) + 502;
+        let proof: Vec<u64> = vec![hash1, hash34];
         assert!(!merkle_tree.verify(proof, 4).unwrap());
     }
 
@@ -383,19 +384,19 @@ mod tests {
         let hash3 = hash("3"); //idx 9
         let hash4 = hash("4"); //idx 10
 
-        let hash12 = hash(hash1 + &hash2);
-        let hash34 = hash(hash3 + &hash4);
+        let hash12 = hash(hash1 as u128 + hash2 as u128);
+        let hash34 = hash(hash3 as u128 + hash4 as u128);
 
-        let hash1234 = hash(hash12 + &hash34);
+        let hash1234 = hash(hash12 as u128 + hash34 as u128);
 
         let hash6 = hash("6"); //idx 12
 
         let hash7 = hash("7"); //idx 13
         let hash8 = hash("8"); //idx 14
 
-        let hash78 = hash(hash7 + &hash8);
+        let hash78 = hash(hash7 as u128 + hash8 as u128);
 
-        let proof: Vec<String> = vec![hash6, hash78, hash1234];
+        let proof: Vec<u64> = vec![hash6, hash78, hash1234];
         assert!(merkle_tree.verify(proof, 11).unwrap());
     }
 
@@ -410,11 +411,11 @@ mod tests {
 
         let hash5 = hash("5"); //idx 11..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash55 = hash(hash5.clone() + &hash5);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash55 = hash(hash5.clone() as u128 + hash5 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
 
         let proof = vec![hash5, hash55, hash1234];
         assert!(merkle_tree.verify(proof, 11).unwrap());
@@ -428,8 +429,8 @@ mod tests {
         let hash3 = hash("3"); //idx 5
         let hash4 = hash("4"); //idx 6
 
-        let hash34 = hash(hash3 + &hash4);
-        let proof: Vec<String> = vec![hash1, hash34];
+        let hash34 = hash(hash3 as u128 + hash4 as u128);
+        let proof: Vec<u64> = vec![hash1, hash34];
         assert_eq!(merkle_tree.generate_proof(4).unwrap(), proof);
     }
 
@@ -441,8 +442,8 @@ mod tests {
         let hash2 = hash("2"); //idx 4
         let hash4 = hash("4"); //idx 6
 
-        let hash12 = hash(hash1 + &hash2);
-        let proof: Vec<String> = vec![hash4, hash12];
+        let hash12 = hash(hash1 as u128 + hash2 as u128);
+        let proof: Vec<u64> = vec![hash4, hash12];
         assert_eq!(merkle_tree.generate_proof(5).unwrap(), proof);
     }
 
@@ -455,19 +456,19 @@ mod tests {
         let hash3 = hash("3"); //idx 9
         let hash4 = hash("4"); //idx 10
 
-        let hash12 = hash(hash1 + &hash2);
-        let hash34 = hash(hash3 + &hash4);
+        let hash12 = hash(hash1 as u128 + hash2 as u128);
+        let hash34 = hash(hash3 as u128 + hash4 as u128);
 
-        let hash1234 = hash(hash12 + &hash34);
+        let hash1234 = hash(hash12 as u128 + hash34 as u128);
 
         let hash6 = hash("6"); //idx 12
 
         let hash7 = hash("7"); //idx 13
         let hash8 = hash("8"); //idx 14
 
-        let hash78 = hash(hash7 + &hash8);
+        let hash78 = hash(hash7 as u128 + hash8 as u128);
 
-        let proof: Vec<String> = vec![hash6, hash78, hash1234];
+        let proof: Vec<u64> = vec![hash6, hash78, hash1234];
         assert_eq!(merkle_tree.generate_proof(11).unwrap(), proof);
     }
 
@@ -482,11 +483,11 @@ mod tests {
 
         let hash5 = hash("5"); //idx 11..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash55 = hash(hash5.clone() + &hash5);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash55 = hash(hash5.clone() as u128 + hash5 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
 
         let proof = vec![hash5, hash55, hash1234];
         assert_eq!(merkle_tree.generate_proof(11).unwrap(), proof);
@@ -495,15 +496,15 @@ mod tests {
     #[test]
     fn test_extend_to_power2_size() {
         let vector = vec!["1", "2", "3", "4"];
-        let vector_extended = extend_to_power2_size(&vector);
+        let vector_extended = extend_to_power2_size(vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "4"]);
 
         let vector = vec!["1", "2", "3"];
-        let vector_extended = extend_to_power2_size(&vector);
+        let vector_extended = extend_to_power2_size(vector);
         assert_eq!(vector_extended, vec!["1", "2", "3", "3"]);
 
         let vector = vec!["1", "2", "3", "4", "5"];
-        let vector_extended = extend_to_power2_size(&vector);
+        let vector_extended = extend_to_power2_size(vector);
         assert_eq!(
             vector_extended,
             vec!["1", "2", "3", "4", "5", "5", "5", "5"]
@@ -521,11 +522,11 @@ mod tests {
 
         let hash5 = hash("5"); //idx 11..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash55 = hash(hash5.clone() + &hash5);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash55 = hash(hash5.clone() as u128 + hash5 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
 
         let proof = vec![hash5, hash55, hash1234];
         assert!(merkle_tree.verify(proof, 11).unwrap());
@@ -544,11 +545,11 @@ mod tests {
         let hash5 = hash("5"); //idx 11
         let hash6 = hash("6"); //idx 12..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash66 = hash(hash6.clone() + &hash6);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash66 = hash(hash6.clone() as u128 + hash6 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
 
         let proof = vec![hash5, hash66, hash1234];
         assert!(merkle_tree.verify(proof, 12).unwrap());
@@ -567,11 +568,11 @@ mod tests {
         let hash5 = hash(5); //idx 11
         let hash6 = hash(6); //idx 12..14
 
-        let hash12 = hash(hash1.clone() + &hash2);
-        let hash34 = hash(hash3.clone() + &hash4);
-        let hash66 = hash(hash6.clone() + &hash6);
+        let hash12 = hash(hash1.clone() as u128 + hash2 as u128);
+        let hash34 = hash(hash3.clone() as u128 + hash4 as u128);
+        let hash66 = hash(hash6.clone() as u128 + hash6 as u128);
 
-        let hash1234 = hash(hash12.clone() + &hash34);
+        let hash1234 = hash(hash12.clone() as u128 + hash34 as u128);
 
         let proof = vec![hash5, hash66, hash1234];
         assert!(merkle_tree.verify(proof, 12).unwrap());

@@ -22,7 +22,7 @@ fn main() {
     let hash3 = hash("3"); //idx 5
     let hash4 = hash("4"); //idx 6
 
-    let hash34 = hash(hash3 + &hash4);
+    let hash34 = hash(hash3 as u128 + hash4 as u128);
     let mut proof: Vec<u64> = vec![hash1, hash34];
 
     //Verifying
@@ -49,8 +49,8 @@ fn main() {
 
     //We update de proof
     let hash5 = hash("5"); //idx 11..14
-    let hash55 = hash(hash5.clone() + &hash5);
-    let hash5555 = hash(hash55.clone() + &hash55);
+    let hash55 = hash(hash5.clone() as u128+ hash5 as u128);
+    let hash5555 = hash(hash55.clone() as u128 + hash55 as u128);
     proof.push(hash5555);
     assert!(merkle_tree.verify(proof, 8).unwrap());
 }
