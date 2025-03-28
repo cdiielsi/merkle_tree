@@ -1,5 +1,4 @@
-use merkle_tree::MerkleTree;
-use sha256::digest;
+use merkle_tree::{MerkleTree, hash};
 
 mod merkle_tree;
 
@@ -19,12 +18,12 @@ fn main() {
     let mut merkle_tree = MerkleTree::new(vector);
 
     //Building a manual proof for the assertion
-    let hash1 = digest("1"); //idx 3
-    let hash3 = digest("3"); //idx 5
-    let hash4 = digest("4"); //idx 6
+    let hash1 = hash("1"); //idx 3
+    let hash3 = hash("3"); //idx 5
+    let hash4 = hash("4"); //idx 6
 
-    let hash34 = digest(hash3 + &hash4);
-    let mut proof: Vec<String> = vec![hash1, hash34];
+    let hash34 = hash(hash3 + &hash4);
+    let mut proof: Vec<u64> = vec![hash1, hash34];
 
     //Verifying
     assert!(merkle_tree.verify(proof.clone(), 4).unwrap());
@@ -49,9 +48,9 @@ fn main() {
     //With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
 
     //We update de proof
-    let hash5 = digest("5"); //idx 11..14
-    let hash55 = digest(hash5.clone() + &hash5);
-    let hash5555 = digest(hash55.clone() + &hash55);
+    let hash5 = hash("5"); //idx 11..14
+    let hash55 = hash(hash5.clone() + &hash5);
+    let hash5555 = hash(hash55.clone() + &hash55);
     proof.push(hash5555);
     assert!(merkle_tree.verify(proof, 8).unwrap());
 }
