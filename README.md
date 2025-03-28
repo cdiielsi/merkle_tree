@@ -45,10 +45,10 @@ The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4
 With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
 
 - Adding new data to an existing Merkle Tree:
-    This implies extending the tree as explained previously or replacing the repeated element along with the corresponding hashes.
+    This implies extending the tree as explained previously or replacing the first repeated element along with the corresponding hashes.
 
 - Verifying that a given hash is in the Merkle Tree:
-    To do this a proof is needed. This proof comes as an array of the minimum amount of hashes needed to compute the root from the hash in question. Go to https://www.youtube.com/watch?v=n6nEPaE7KZ8 or the other references for further understanding.
+    To do this a proof is needed. This proof comes as an array of the minimum amount of hashes needed to compute the root from the hash in question. Eg: for the previous example the proof for index 11 would be [h6,h66,h123]. Go to https://www.youtube.com/watch?v=n6nEPaE7KZ8 or the other references below for further understanding.
 
 - Giving proof that the Merkle Tree contains an element.
     This means building such an array as the proof described for the previous functionality.

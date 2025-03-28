@@ -1,22 +1,22 @@
-use merkle_tree::Merkle_Tree;
+use merkle_tree::MerkleTree;
 use sha256::digest;
 
 mod merkle_tree;
 
-fn main(){
-/// Given a 4 leves tree:
-/// 
-///       root
-///     /      \
-///   h12        h34
-///   / \        / \
-/// h1   h2    h3   h4
-/// |    |     |     |
-/// data1 data2 data3 data4
-/// The array representation would be: [root,h12,h34,h1,h2,h3,h4]
-/// With the indexes                     0   1   2   3  4  5   6
+fn main() {
+    // Given a 4 leves tree:
+    //
+    //       root
+    //     /      \
+    //   h12        h34
+    //   / \        / \
+    // h1   h2    h3   h4
+    // |    |     |     |
+    // data1 data2 data3 data4
+    // The array representation would be: [root,h12,h34,h1,h2,h3,h4]
+    // With the indexes                     0   1   2   3  4  5   6
     let vector = vec!["1", "2", "3", "4"];
-    let mut merkle_tree = Merkle_Tree::new(vector);
+    let mut merkle_tree = MerkleTree::new(vector);
 
     //Building a manual proof for the assertion
     let hash1 = digest("1"); //idx 3
@@ -27,7 +27,7 @@ fn main(){
     let mut proof: Vec<String> = vec![hash1, hash34];
 
     //Verifying
-    assert!(merkle_tree.verify(proof.clone(), 4));
+    assert!(merkle_tree.verify(proof.clone(), 4).unwrap());
     //Generating proof
     assert_eq!(merkle_tree.generate_proof(4).unwrap(), proof.clone());
     //Adding a node
@@ -44,8 +44,8 @@ fn main(){
     //     / \        / \         / \        / \
     //   h1   h2    h3   h4     h5   h5    h5   h5
     //   |    |     |     |     |    |     |     |
-    //data1 data2 data3 data4 data5 data6 data6 data6 
-    //The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h6,h6,h6]
+    //data1 data2 data3 data4 data5 data6 data6 data6
+    //The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h5,h5,h5]
     //With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
 
     //We update de proof
@@ -53,5 +53,5 @@ fn main(){
     let hash55 = digest(hash5.clone() + &hash5);
     let hash5555 = digest(hash55.clone() + &hash55);
     proof.push(hash5555);
-    assert!(merkle_tree.verify(proof, 8));
+    assert!(merkle_tree.verify(proof, 8).unwrap());
 }
