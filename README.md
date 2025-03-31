@@ -15,6 +15,7 @@ Plainly said, a Merkle Tree is for comparing and verifying if two users have the
 
 ## Dependencies
 - rust 1.85.0
+- sha256 = "1.6.0"
 
 ### About this project
 The tree structure implemented in this project revolves around an array that should be interpreted as the following example:
@@ -32,6 +33,8 @@ We'll have the following array with it's corresponding indexes:
  root | h12 | h34 | h1 | h2 | h3 | h4 
  :---: | :---: | :---: | :---: | :---: | :---: | :---: 
  0 | 1 | 2 | 3 | 4 | 5 | 6 
+
+For hashing I use the Secure Hash Algorithm *SHA-256*.
 
 This implementation supports:
 
@@ -71,4 +74,5 @@ root | h1234 | h5666 | h12 | h34 | h56 | h66 | h1 | h2 | h3 | h4 | h5 | h6 | h6 
 https://brilliant.org/wiki/merkle-tree/ <br />
 https://en.wikipedia.org/wiki/Merkle_tree <br />
 https://www.youtube.com/watch?v=n6nEPaE7KZ8 <br />
-https://decentralizedthoughts.github.io/2020-12-22-what-is-a-merkle-tree/
+https://decentralizedthoughts.github.io/2020-12-22-what-is-a-merkle-tree/ <br />
+https://en.wikipedia.org/wiki/SHA-2
