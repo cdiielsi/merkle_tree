@@ -49,8 +49,8 @@ fn main() {
 
     //We update de proof
     let hash5 = hash("5"); //idx 11..14
-    let hash55 = hash(hash5.clone() as u128+ hash5 as u128);
-    let hash5555 = hash(hash55.clone() as u128 + hash55 as u128);
+    let hash55 = hash(hash5 as u128 + hash5 as u128);
+    let hash5555 = hash(hash55 as u128 + hash55 as u128);
     proof.push(hash5555);
     assert!(merkle_tree.verify(proof, 8).unwrap());
 }

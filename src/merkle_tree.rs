@@ -1,4 +1,4 @@
-use std::hash::{DefaultHasher,Hasher,Hash};
+use std::hash::{DefaultHasher, Hash, Hasher};
 
 /// Implementation of merkle tree. The struct has a field for the tree structure which revolves around an array that
 /// should be interpreted as the following example:
@@ -13,9 +13,9 @@ use std::hash::{DefaultHasher,Hasher,Hash};
 /// data1 data2 data3 data4
 /// The array representation would be: [root,h12,h34,h1,h2,h3,h4]
 /// With the indexes                     0   1   2   3  4  5   6
-/// It also has a field for the last index you can find a data hash (in this case 6), and a field that specifies the
-/// total leaves of data the tree including the repeated leaves, this is needed for the add_node method.
-
+/// The struct also has a field for the last index you can find a not repeated data hash (in this case 6),
+/// and a field that specifies the total of leaves the tree has including the repeated ones,
+/// this is,as well as the original data vector size field, is needed for adding nodes dynamically to the tree.
 pub struct MerkleTree {
     tree: Vec<u64>,
     last_data_index: usize,
@@ -37,7 +37,7 @@ impl MerkleTree {
             let mut level_n_minus1 = vec![];
             for i in (0..level_n.len()).step_by(2) {
                 //Build new level from the previous one
-                level_n_minus1.push(hash(level_n[i].clone() as u128+ level_n[i + 1] as u128));
+                level_n_minus1.push(hash(level_n[i] as u128 + level_n[i + 1] as u128));
             }
             let next_current_level = level_n_minus1.clone();
             if level == 0 {
@@ -52,7 +52,7 @@ impl MerkleTree {
 
         Self {
             tree: current_tree.clone(),
-            last_data_index: last_data_index,
+            last_data_index,
             og_data_vector_size: data_vector.len(),
             leaves_amount: pow2_data_vector.len(),
         }
@@ -68,19 +68,20 @@ impl MerkleTree {
     /// The array representation would be: [root,h12,h34,h1,h2,h3,h4]
     /// With the indexes                     0   1   2   3  4  5   6
     pub fn verify(&self, proofs: Vec<u64>, mut leaf_index: usize) -> Option<bool> {
-        let mut hash_for_verification = self.tree.get(leaf_index)?.clone();
+        let mut hash_for_verification = *self.tree.get(leaf_index)?;
         for proof in proofs {
             if leaf_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
-                hash_for_verification = hash(hash_for_verification.to_owned() as u128 + proof as u128);
+                hash_for_verification =
+                    hash(hash_for_verification.to_owned() as u128 + proof as u128);
             } else {
                 // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
-                hash_for_verification = hash(proof.clone() as u128+ hash_for_verification as u128);
+                hash_for_verification = hash(proof as u128 + hash_for_verification as u128);
                 leaf_index -= 1; //if it's a right child this is necesary to calculate its parent
             }
-            leaf_index = leaf_index / 2;
+            leaf_index /= 2;
         }
-        let ret = hash_for_verification == *self.tree.get(0)?;
+        let ret = hash_for_verification == *self.tree.first()?;
         Some(ret)
     }
 
@@ -93,18 +94,18 @@ impl MerkleTree {
         while node_index > 0 {
             if node_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
-                proof.push(self.tree.get(node_index + 1)?.clone());
+                proof.push(*self.tree.get(node_index + 1)?);
             } else {
                 // if index is even we are on a right branch, so the verification must be computed concatenating the proof first
-                proof.push(self.tree.get(node_index - 1)?.clone());
+                proof.push(*self.tree.get(node_index - 1)?);
                 node_index -= 1; //if it's a right child this is necesary to calculate its parent
             }
-            node_index = node_index / 2;
+            node_index /= 2;
         }
         Some(proof)
     }
 
-    /// Returns a merkle tree with a new node, if the total amount of data is not a power of 2
+    /// This method returns a merkle tree with a new node, if the total amount of data is not a power of 2
     /// If the true amount of data is a power of two the method "creates" another tree of the same size
     /// only from the new data, like so:
     ///                      root
@@ -143,7 +144,7 @@ impl MerkleTree {
             //If tree has repeated data because of padding
             for index in self.last_data_index + 1..self.tree.len() {
                 self.tree[index] = hash(&data);
-                let mut node_index = index as usize;
+                let mut node_index = index;
                 while node_index > 1 {
                     if node_index % 2 == 1 {
                         // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
@@ -159,7 +160,7 @@ impl MerkleTree {
                         );
                         node_index -= 1; //if it's a right child this is necesary to calculate its parent
                     }
-                    node_index = node_index / 2;
+                    node_index /= 2;
                 }
             }
             self.last_data_index += 1;
@@ -170,13 +171,12 @@ impl MerkleTree {
             let mut level_start_index = self.tree.len() - self.og_data_vector_size;
             let mut level_end_index = self.tree.len();
             let mut amount_of_current_nodes = self.og_data_vector_size;
-            for level in 0..(self.og_data_vector_size as f64).sqrt().ceil() as usize + 1 as usize {
+            for level in 0..(self.og_data_vector_size as f64).sqrt().ceil() as usize + 1_usize {
                 // get the current level nodes
                 let mut current_level: Vec<u64> =
                     self.tree[level_start_index..level_end_index].to_vec();
-                current_level.push(new_data.clone()); //push the new data
-                let current_level_to_pow_2 =
-                    extend_to_power2_size(current_level); //get the new nodes level
+                current_level.push(new_data); //push the new data
+                let current_level_to_pow_2 = extend_to_power2_size(current_level); //get the new nodes level
                 if level != 0 {
                     computed_base = current_tree.clone();
                 }
@@ -184,10 +184,11 @@ impl MerkleTree {
                 current_tree.append(&mut computed_base);
                 level_end_index = level_start_index;
                 amount_of_current_nodes /= 2;
-                level_start_index = level_start_index - amount_of_current_nodes;
-                new_data = hash(new_data.clone() as u128 + new_data as u128); //calculate current level hash parent
+                level_start_index -= amount_of_current_nodes;
+                new_data = hash(new_data as u128 + new_data as u128); //calculate current level hash parent
             }
-            new_data = hash(current_tree.get(0)?.to_owned() as u128 + *current_tree.get(1)? as u128); //calculate new root
+            new_data =
+                hash(current_tree.first()?.to_owned() as u128 + *current_tree.get(1)? as u128); //calculate new root
             current_tree.insert(0, new_data);
             self.tree = current_tree;
             self.leaves_amount *= 2;
@@ -200,9 +201,9 @@ impl MerkleTree {
 
 ///Extends the size of a vector to a power of 2 by repeating the last value.
 fn extend_to_power2_size<T: Clone + ToString>(vec: Vec<T>) -> Vec<T> {
-    let mut copy:Vec<T>  = vec.clone();
+    let mut copy: Vec<T> = vec.clone();
     if !is_power_of_2(vec.len()) {
-        let new_size = (2 as i32).pow(((vec.len() as f64).log2()).ceil() as u32); // ((vec.len() as f64).log2()).ceil() is an operation to get the biggest power of 2 exponent smaller than vec.len()
+        let new_size = (2_i32).pow(((vec.len() as f64).log2()).ceil() as u32); // ((vec.len() as f64).log2()).ceil() is an operation to get the biggest power of 2 exponent smaller than vec.len()
         for _ in 0..(new_size as usize) - vec.len() {
             copy.push(vec[vec.len() - 1].clone());
         }
@@ -223,24 +224,29 @@ pub fn hash<T: Hash>(element: T) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn merkle_tree_4_leaves_setup() -> MerkleTree {
+    fn merkle_string_tree_4_leaves_setup() -> MerkleTree {
         let vector = vec!["1", "2", "3", "4"];
         MerkleTree::new(vector)
     }
 
-    fn merkle_tree_5_data_8_leaves_setup() -> MerkleTree {
+    fn merkle_string_tree_5_data_8_leaves_setup() -> MerkleTree {
         let vector = vec!["1", "2", "3", "4", "5"];
         MerkleTree::new(vector)
     }
 
-    fn merkle_tree_8_leaves_setup() -> MerkleTree {
+    fn merkle_string_tree_8_leaves_setup() -> MerkleTree {
         let vector = vec!["1", "2", "3", "4", "5", "6", "7", "8"];
         MerkleTree::new(vector)
     }
 
+    fn merkle_int_tree_4_leaves_setup() -> MerkleTree {
+        let vector = vec![1, 2, 3, 4];
+        MerkleTree::new(vector)
+    }
+
     #[test]
-    fn new_merkle_tree_of_4_leaves() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn new_merkle_string_tree_of_4_leaves() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash2 = hash("2"); //idx 4
@@ -253,8 +259,8 @@ mod tests {
     }
 
     #[test]
-    fn new_merkle_tree_of_8_leaves() {
-        let merkle_tree = merkle_tree_8_leaves_setup();
+    fn new_merkle_string_tree_of_8_leaves() {
+        let merkle_tree = merkle_string_tree_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -285,8 +291,8 @@ mod tests {
     }
 
     #[test]
-    fn new_merkle_tree_of_5_data_8_leaves() {
-        let merkle_tree = merkle_tree_5_data_8_leaves_setup();
+    fn new_merkle_string_tree_of_5_data_8_leaves() {
+        let merkle_tree = merkle_string_tree_5_data_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -326,8 +332,8 @@ mod tests {
     }
 
     #[test]
-    fn verify_correct_proof_with_even_leaf_index() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn verify_correct_proof_with_even_leaf_index_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash3 = hash("3"); //idx 5
@@ -339,8 +345,8 @@ mod tests {
     }
 
     #[test]
-    fn verify_correct_proof_with_odd_leaf_index() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn verify_correct_proof_with_odd_leaf_index_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash2 = hash("2"); //idx 4
@@ -352,8 +358,8 @@ mod tests {
     }
 
     #[test]
-    fn verify_incorrect_proof() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn verify_incorrect_proof_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash4 = hash("4"); //idx 6
@@ -363,21 +369,21 @@ mod tests {
     }
 
     #[test]
-    fn verify_incorrect_proof_with_noise() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn verify_incorrect_proof_with_noise_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash3 = hash("3"); //idx 5
         let hash4 = hash("4"); //idx 6
 
-        let hash34 = hash(hash3 as u128+ hash4 as u128) + 502;
+        let hash34 = hash(hash3 as u128 + hash4 as u128) + 502;
         let proof: Vec<u64> = vec![hash1, hash34];
         assert!(!merkle_tree.verify(proof, 4).unwrap());
     }
 
     #[test]
-    fn verify_with_odd_leaf_index_8leaves_tree() {
-        let merkle_tree = merkle_tree_8_leaves_setup();
+    fn verify_with_odd_leaf_index_8leaves_string_tree() {
+        let merkle_tree = merkle_string_tree_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -401,8 +407,8 @@ mod tests {
     }
 
     #[test]
-    fn verify_with_odd_leaf_tree_of_5_data_8_leaves() {
-        let merkle_tree = merkle_tree_5_data_8_leaves_setup();
+    fn verify_with_odd_leaf_string_tree_of_5_data_8_leaves() {
+        let merkle_tree = merkle_string_tree_5_data_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -422,8 +428,8 @@ mod tests {
     }
 
     #[test]
-    fn generate_proof_with_even_leaf_index() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn generate_proof_with_even_leaf_index_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash3 = hash("3"); //idx 5
@@ -435,8 +441,8 @@ mod tests {
     }
 
     #[test]
-    fn generate_proof_with_odd_leaf_index() {
-        let merkle_tree = merkle_tree_4_leaves_setup();
+    fn generate_proof_with_odd_leaf_index_string_tree() {
+        let merkle_tree = merkle_string_tree_4_leaves_setup();
 
         let hash1 = hash("1"); //idx 3
         let hash2 = hash("2"); //idx 4
@@ -448,8 +454,8 @@ mod tests {
     }
 
     #[test]
-    fn generate_proof_with_odd_leaf_index_8leaves_tree() {
-        let merkle_tree = merkle_tree_8_leaves_setup();
+    fn generate_proof_with_odd_leaf_index_8leaves_string_tree() {
+        let merkle_tree = merkle_string_tree_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -473,8 +479,8 @@ mod tests {
     }
 
     #[test]
-    fn generate_proof_with_odd_leaf_tree_of_5_data_8_leaves() {
-        let merkle_tree = merkle_tree_5_data_8_leaves_setup();
+    fn generate_proof_with_odd_leaf_string_tree_of_5_data_8_leaves() {
+        let merkle_tree = merkle_string_tree_5_data_8_leaves_setup();
 
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -509,11 +515,15 @@ mod tests {
             vector_extended,
             vec!["1", "2", "3", "4", "5", "5", "5", "5"]
         );
+
+        let vector = vec![1, 2, 3, 4, 5];
+        let vector_extended = extend_to_power2_size(vector);
+        assert_eq!(vector_extended, vec![1, 2, 3, 4, 5, 5, 5, 5]);
     }
 
     #[test]
-    fn add_node_and_verify_proof_with_odd_leaf_tree_of_5_data_8_leaves() {
-        let mut merkle_tree = merkle_tree_4_leaves_setup();
+    fn add_node_and_verify_proof_with_odd_leaf_string_tree_of_5_data_8_leaves() {
+        let mut merkle_tree = merkle_string_tree_4_leaves_setup();
         merkle_tree.add_node("5");
         let hash1 = hash("1"); //idx 7
         let hash2 = hash("2"); //idx 8
@@ -533,8 +543,8 @@ mod tests {
     }
 
     #[test]
-    fn add_node_and_verify_proof_with_even_leaf_tree_of_6_data_8_leaves() {
-        let mut merkle_tree = merkle_tree_4_leaves_setup();
+    fn add_node_and_verify_proof_with_even_leaf_string_tree_of_6_data_8_leaves() {
+        let mut merkle_tree = merkle_string_tree_4_leaves_setup();
         merkle_tree.add_node("5");
         merkle_tree.add_node("6");
         let hash1 = hash("1"); //idx 7
@@ -556,8 +566,8 @@ mod tests {
     }
 
     #[test]
-    fn add_node_and_verify_proof_with_even_leaf_not_string_tree_of_6_data_8_leaves() {
-        let mut merkle_tree = merkle_tree_4_leaves_setup();
+    fn add_node_and_verify_proof_with_even_leaf_int_tree_of_6_data_8_leaves() {
+        let mut merkle_tree = merkle_int_tree_4_leaves_setup();
         merkle_tree.add_node(5);
         merkle_tree.add_node(6);
         let hash1 = hash(1); //idx 7

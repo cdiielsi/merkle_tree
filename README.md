@@ -19,13 +19,14 @@ Given a 4 leves tree:
        |    |     |     |
     data1 data2 data3 data4
 
-The array representation would be: [root,h12,h34,h1,h2,h3,h4] <br />
-With the indexes                     0   1   2   3  4  5   6
+The array representation would be: | root | h12 | h34 | h1 | h2 | h3 | h4 
+--- | --- | --- | --- |--- |--- |--- |--- 
+With the indexes | 0 | 1 | 2 | 3 | 4 | 5 | 6 
 
 This implementation supports:
 
-- Building a Merkle Tree out of an array of data of any size (array elements must be String):
-    This implies having all the hashes computed and inserted into an array as shown previously. In cases where the amount of original data is not a power of 2 the last element of the array is duplicated until the size of the array reaches such size. Then the tree is designed as follows:
+- Building a Merkle Tree out of an array of data of any size:
+    This implies having all the hashes computed and inserted into an array as shown previously. In cases where the amount of original data is not a power of 2, the last element of the array is duplicated until the size of the array reaches such size. Then the tree is designed as follows:
 
  Given a 6 leves tree:   
  
@@ -42,21 +43,21 @@ This implementation supports:
        |    |     |     |     |    |     |     |
     data1 data2 data3 data4 data5 data6 data6 data6 
 
-The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h6,h6,h6] <br />
-With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
+The array representation would be: | root | h1234 | h5666 | h12 | h34 | h56 | h66 | h1 | h2 | h3 | h4 | h5 | h6 | h6 | h6 
+--- | --- | --- | --- |--- |--- |--- |--- | --- | --- | --- | --- |--- |--- |--- |--- 
+With the indexes | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
 
 - Adding new data to an existing Merkle Tree:
-    This implies extending the tree as explained previously or replacing the first repeated element along with the corresponding hashes.
+    This implies extending the tree as explained previously or replacing the last repeated elements with the new one along with computing the corresponding hashes.
 
 - Verifying that a given hash is in the Merkle Tree:
-    To do this a proof is needed. This proof comes as an array of the minimum amount of hashes needed to compute the root from the hash in question. Eg: for the previous example the proof for index 11 would be [h6,h66,h123]. Go to https://www.youtube.com/watch?v=n6nEPaE7KZ8 or the other references below for further understanding.
+    To do this a proof is needed. This proof comes as an array of the minimum amount of hashes needed to compute the root from the hash in question. Eg: for the previous example the proof for the hash in index 11 would be [h6,h66,h123]. Go to https://www.youtube.com/watch?v=n6nEPaE7KZ8 or the other references below for further understanding.
 
 - Giving proof that the Merkle Tree contains an element.
     This means building such an array as the proof described for the previous functionality.
 
 ## Dependencies
 - rust 1.85.0
-- sha256 1.6.0
 
 ## How to run
 
