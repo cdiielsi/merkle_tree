@@ -17,7 +17,7 @@ Plainly said, a Merkle Tree is for comparing and verifying if two users have the
 - rust 1.85.0
 - sha256 = "1.6.0"
 
-### About this project
+## About this project
 The tree structure implemented in this project revolves around an array that should be interpreted as the following example:
 Given a 4 leves tree:
 
