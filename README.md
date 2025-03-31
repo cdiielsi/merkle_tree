@@ -39,7 +39,7 @@ We'll have the following array with it's corresponding indexes:
  :---: | :---: | :---: | :---: | :---: | :---: | :---: 
  0 | 1 | 2 | 3 | 4 | 5 | 6 
 
-For hashing I use the Secure Hash Algorithm **SHA-256**.
+For hashing I use the Secure Hash Algorithm **SHA-256** crate. The data from which the tree is built can only be of a type that the sha256 digest algorithm has an implementation for. Visit [sha256-documentation](https://docs.rs/sha256/1.6.0/sha256/trait.Sha256Digest.html) for the full list.
 
 This implementation supports:
 
@@ -80,4 +80,5 @@ https://brilliant.org/wiki/merkle-tree/ <br />
 https://en.wikipedia.org/wiki/Merkle_tree <br />
 https://www.youtube.com/watch?v=n6nEPaE7KZ8 <br />
 https://decentralizedthoughts.github.io/2020-12-22-what-is-a-merkle-tree/ <br />
-https://en.wikipedia.org/wiki/SHA-2
+https://en.wikipedia.org/wiki/SHA-2 <br />
+https://docs.rs/sha256/1.6.0/sha256/trait.Sha256Digest.html
