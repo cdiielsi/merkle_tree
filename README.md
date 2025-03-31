@@ -34,7 +34,7 @@ We'll have the following array with it's corresponding indexes:
  :---: | :---: | :---: | :---: | :---: | :---: | :---: 
  0 | 1 | 2 | 3 | 4 | 5 | 6 
 
-For hashing I use the Secure Hash Algorithm *SHA-256*.
+For hashing I use the Secure Hash Algorithm **SHA-256**.
 
 This implementation supports:
 
