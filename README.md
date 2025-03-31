@@ -7,6 +7,15 @@ A merkle tree (also known as a hash tree) is a tree used to store several data i
 ### What are a Merkle Trees used for?
 Plainly said, a Merkle Tree is for comparing and verifying if two users have the same data. This structure is used for data verification in peer to peer networks, such as bitcoin, so you can efficiently prove that transactions were validated. It's also used for maintaining the integrity of files stored across networks and transmitting files over unreliable channels.
 
+## Quick Start
+
+- To build and run the project, run: make
+
+- To run the tests, run: make test
+
+## Dependencies
+- rust 1.85.0
+
 ### About this project
 The tree structure implemented in this project revolves around an array that should be interpreted as the following example:
 Given a 4 leves tree:
@@ -57,15 +66,6 @@ root | h1234 | h5666 | h12 | h34 | h56 | h66 | h1 | h2 | h3 | h4 | h5 | h6 | h6 
 
 - Giving proof that the Merkle Tree contains an element.
     This means building such an array as the proof described for the previous functionality.
-
-## Dependencies
-- rust 1.85.0
-
-## How to run
-
-- To build and run the project, run: make
-
-- To run the tests, run: make test
 
 ## References
 https://brilliant.org/wiki/merkle-tree/ <br />
