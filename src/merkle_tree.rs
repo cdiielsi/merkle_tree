@@ -1,4 +1,4 @@
-use sha256::{Sha256Digest, digest};
+use sha256::digest;
 
 /// Implementation of merkle tree. The struct has a field for the tree structure which revolves around an array that
 /// should be interpreted as the following example:
@@ -25,11 +25,11 @@ pub struct MerkleTree {
 impl MerkleTree {
     /// Builds the tree concatenating the diferent levels into one array.
     /// The final array tree goes from root to leaves -> [root....branch_n, branch_n+1....leaf].
-    pub fn new<T: Sha256Digest + Clone>(data_vector: Vec<T>) -> Self {
+    pub fn new(data_vector: Vec<&str>) -> Self {
         let pow2_data_vector = extend_to_power2_size(data_vector.clone());
         let mut level_n = vec![];
         for data in &pow2_data_vector {
-            level_n.push(digest(data.clone()));
+            level_n.push(digest(*data));
         }
         let mut current_tree = vec![];
         for level in 0..(pow2_data_vector.len() as f64).sqrt().ceil() as usize {
@@ -87,9 +87,6 @@ impl MerkleTree {
     /// Given an index of a data hash the function must return the proof that the tree contains that data hash.
     pub fn generate_proof(&self, mut node_index: usize) -> Option<Vec<String>> {
         let mut proof: Vec<String> = vec![];
-        if node_index > self.tree.len() {
-            return None;
-        }
         while node_index > 0 {
             if node_index % 2 == 1 {
                 // if index is odd we are on a left branch, so the verification must be computed concatenating the proof second
@@ -138,11 +135,11 @@ impl MerkleTree {
     ///data1 data2 data3 data4 data5 data6 data6 data6
     ///The array representation would be: [root,h1234,h5666,h12,h34,h56,h66,h1,h2,h3,h4,h5,h6,h6,h6]
     ///With the indexes                     0     1     2    3   4   5   6  7  8  9  10 11 12 13 14
-    pub fn add_node<T: Sha256Digest + Clone>(&mut self, data: T) -> Option<()> {
+    pub fn add_node(&mut self, data: &str) -> Option<()> {
         if !is_power_of_2(self.og_data_vector_size) {
             //If tree has repeated data because of padding
             for index in self.last_data_index + 1..self.tree.len() {
-                self.tree[index] = digest(data.clone());
+                self.tree[index] = digest(data);
                 let mut node_index = index;
                 while node_index > 1 {
                     if node_index % 2 == 1 {
@@ -228,11 +225,6 @@ mod tests {
 
     fn merkle_string_tree_8_leaves_setup() -> MerkleTree {
         let vector = vec!["1", "2", "3", "4", "5", "6", "7", "8"];
-        MerkleTree::new(vector)
-    }
-
-    fn merkle_vec_u8_tree_4_leaves_setup() -> MerkleTree {
-        let vector: Vec<Vec<u8>> = vec![vec![1], vec![2], vec![3], vec![4]];
         MerkleTree::new(vector)
     }
 
@@ -507,10 +499,6 @@ mod tests {
             vector_extended,
             vec!["1", "2", "3", "4", "5", "5", "5", "5"]
         );
-
-        let vector = vec![1, 2, 3, 4, 5];
-        let vector_extended = extend_to_power2_size(vector);
-        assert_eq!(vector_extended, vec![1, 2, 3, 4, 5, 5, 5, 5]);
     }
 
     #[test]
@@ -546,29 +534,6 @@ mod tests {
 
         let hash5 = digest("5"); //idx 11
         let hash6 = digest("6"); //idx 12..14
-
-        let hash12 = digest(hash1.clone() + &hash2);
-        let hash34 = digest(hash3.clone() + &hash4);
-        let hash66 = digest(hash6.clone() + &hash6);
-
-        let hash1234 = digest(hash12.clone() + &hash34);
-
-        let proof = vec![hash5, hash66, hash1234];
-        assert!(merkle_tree.verify(proof, 12).unwrap());
-    }
-
-    #[test]
-    fn add_node_and_verify_proof_with_even_leaf_vec_u8_tree_of_6_data_8_leaves() {
-        let mut merkle_tree = merkle_vec_u8_tree_4_leaves_setup();
-        merkle_tree.add_node(vec![5 as u8]);
-        merkle_tree.add_node(vec![6 as u8]);
-        let hash1 = digest(vec![1 as u8]); //idx 7
-        let hash2 = digest(vec![2 as u8]); //idx 8
-        let hash3 = digest(vec![3 as u8]); //idx 9
-        let hash4 = digest(vec![4 as u8]); //idx 10
-
-        let hash5 = digest(vec![5 as u8]); //idx 11
-        let hash6 = digest(vec![6 as u8]); //idx 12..14
 
         let hash12 = digest(hash1.clone() + &hash2);
         let hash34 = digest(hash3.clone() + &hash4);

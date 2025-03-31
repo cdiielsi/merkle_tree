@@ -39,11 +39,11 @@ We'll have the following array with it's corresponding indexes:
  :---: | :---: | :---: | :---: | :---: | :---: | :---: 
  0 | 1 | 2 | 3 | 4 | 5 | 6 
 
-For hashing I use the Secure Hash Algorithm **SHA-256** crate. The data from which the tree is built can only be of a type that the sha256 digest algorithm has an implementation for. Visit [sha256-documentation](https://docs.rs/sha256/1.6.0/sha256/trait.Sha256Digest.html) for the full list.
+For hashing I use the Secure Hash Algorithm **SHA-256** crate. The data from which the tree is built can only be of **&str** type.
 
 This implementation supports:
 
-- Building a Merkle Tree out of an array of data of any size:
+- Building a Merkle Tree out of an array of data of any size (data must be &str):
     This implies having all the hashes computed and inserted into an array as shown previously. In cases where the amount of original data is not a power of 2, the last element of the array is duplicated until the size of the array reaches such size. Then the tree is designed as follows:
 
  Given a 6 leves tree:   
