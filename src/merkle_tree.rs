@@ -29,7 +29,7 @@ impl MerkleTree {
         let pow2_data_vector = extend_to_power2_size(data_vector.clone());
         let mut level_n = vec![];
         for data in &pow2_data_vector {
-            level_n.push(hash(data.clone()));
+            level_n.push(hash(data));
         }
         let mut current_tree = vec![];
         for level in 0..(pow2_data_vector.len() as f64).sqrt().ceil() as usize {
