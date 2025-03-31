@@ -9,9 +9,14 @@ Plainly said, a Merkle Tree is for comparing and verifying if two users have the
 
 ## Quick Start
 
-- To build and run the project, run: make
-
-- To run the tests, run: make test
+- To build and run the project, run:
+```
+make
+```
+- To run the tests, run:
+```
+make test
+```
 
 ## Dependencies
 - rust 1.85.0
