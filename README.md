@@ -20,7 +20,7 @@ make test
 
 ## Dependencies
 - rust 1.85.0
-- sha256 = "1.6.0"
+- sha256 1.6.0
 
 ## About this project
 The tree structure implemented in this project revolves around an array that should be interpreted as the following example:
